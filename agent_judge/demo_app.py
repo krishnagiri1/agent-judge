@@ -1,8 +1,9 @@
-"""Public Gradio demo: score a coding-agent transcript with the LLM judge.
+"""Public Gradio demo.
 
-Deploys as-is to Hugging Face Spaces (see README). Configure the default judge with
-the JUDGE_PROVIDER / JUDGE_MODEL environment variables and add the matching API key
-as a Space secret.
+Tab 1 shows the saved verdicts from the experiment runs (no API key or GPU needed), next to
+the actual test outcome and, where available, the human label. Tab 2 judges a transcript live
+with any configured provider. Configure the live judge with JUDGE_PROVIDER / JUDGE_MODEL and
+the matching API key (as Space secrets on Hugging Face).
 """
 
 from __future__ import annotations
@@ -10,20 +11,40 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from .data import load_trajectories
+from .data import latest_by_id, load_jsonl, load_trajectories
 from .judge import POINTWISE_PROMPTS, SYSTEM_PROMPT, _call_with_parse, build_pointwise_prompt, parse_pointwise
 from .llm import make_client
-from .render import truncate_middle
+from .render import render_transcript, truncate_middle
 from .rubric import DIMENSIONS, rubric_text
 
 ROOT = Path(__file__).resolve().parent.parent
 
+FILTERS = ["All transcripts", "Hand-labeled (50)", "Judge was wrong", "Judge was right"]
 
-def _load_examples() -> list:
+
+def _rater_name(judge: str, prompt: str) -> str:
+    if judge.startswith("mock:heuristic"):
+        return "Heuristic baseline (no LLM)"
+    return f"{judge.split(':', 1)[-1]} · prompt {prompt}"
+
+
+def _load_trajectories() -> list:
     for p in (ROOT / "data" / "sample.jsonl", ROOT / "examples" / "examples.jsonl"):
         if p.exists():
-            return load_trajectories(p)[:50]
+            return load_trajectories(p)
     return []
+
+
+def _load_saved_runs() -> list[tuple[str, dict]]:
+    """[(rater name, {transcript id: record})] from results/judge_*.jsonl; LLM runs first."""
+    runs = []
+    for p in sorted((ROOT / "results").glob("judge_*.jsonl")):
+        recs = {i: r for i, r in latest_by_id(load_jsonl(p)).items() if r.get("scores")}
+        if recs:
+            first = next(iter(recs.values()))
+            runs.append((_rater_name(first.get("judge", p.stem), first.get("prompt", "?")), recs))
+    runs.sort(key=lambda x: x[0].startswith("Heuristic"))
+    return runs
 
 
 def _format(parsed: dict | None, err: str | None, truth: bool | None) -> str:
@@ -39,28 +60,78 @@ def _format(parsed: dict | None, err: str | None, truth: bool | None) -> str:
     return out
 
 
+def _verdict_table(tid: str, truth: bool, runs: list, human: dict) -> str:
+    raters = [(name, recs[tid]) for name, recs in runs if tid in recs]
+    if tid in human:
+        raters.append(("**Human label**", human[tid]))
+    if not raters:
+        return "_No saved verdicts for this transcript._"
+    head = "| Rater | " + " | ".join(DIMENSIONS) + " | P(pass) | Right about the outcome? |"
+    sep = "|---|" + "---|" * (len(DIMENSIONS) + 2)
+    lines = [head, sep]
+    for name, r in raters:
+        p = r.get("resolved_probability")
+        right = "–" if p is None or p == 50 else ("✅" if (p > 50) == truth else "❌")
+        prob = "–" if p is None else f"{p:.0f}%"
+        scores = " | ".join(str(r["scores"].get(d, "–")) for d in DIMENSIONS)
+        lines.append(f"| {name} | {scores} | {prob} | {right} |")
+    out = f"**Actual test outcome: {'✅ the patch passed' if truth else '❌ the patch failed'}**\n\n" + "\n".join(lines)
+    rationale = [(n, r.get("rationale")) for n, r in raters if r.get("rationale") and not n.startswith("Heuristic")]
+    for n, text in rationale[:2]:
+        out += f"\n\n**{n} rationale:** {text}"
+    return out
+
+
 def build_app():
     import gradio as gr
 
-    examples = _load_examples()
-    by_label = {f"{t.instance_id} ({t.id.split('::')[-1]})": t for t in examples}
+    trajs = _load_trajectories()
+    runs = _load_saved_runs()
+    human = {i: r for i, r in latest_by_id(load_jsonl(ROOT / "data" / "labels.jsonl")).items() if r.get("scores")}
+    best = runs[0][1] if runs else {}
 
-    def run(source, example, pasted, provider, model, prompt_version):
+    def label(i, t):
+        return f"#{i + 1:03d} · {t.instance_id}"
+
+    by_label = {label(i, t): t for i, t in enumerate(trajs)}
+
+    def choices(flt: str) -> list[str]:
+        out = []
+        for lab, t in by_label.items():
+            p = best.get(t.id, {}).get("resolved_probability")
+            wrong = p is not None and p != 50 and (p > 50) != t.resolved
+            if (flt == "Hand-labeled (50)" and t.id not in human) or \
+               (flt == "Judge was wrong" and not wrong) or \
+               (flt == "Judge was right" and (p is None or p == 50 or wrong)):
+                continue
+            out.append(lab)
+        return out
+
+    def show_saved(lab):
+        if lab not in by_label:
+            return "", ""
+        t = by_label[lab]
+        return _verdict_table(t.id, t.resolved, runs, human), render_transcript(t)
+
+    def refilter(flt):
+        c = choices(flt)
+        first = c[0] if c else None
+        return (gr.update(choices=c, value=first), *show_saved(first))
+
+    def run_live(source, lab, pasted, provider, model, prompt_version):
         try:
             client = make_client(provider, model)
         except Exception as e:
             return f"⚠️ Could not create the {provider} client: {e}"
         if source == "Example from the dataset":
-            if example not in by_label:
+            if lab not in by_label:
                 return "Pick an example first."
-            t = by_label[example]
-            user = build_pointwise_prompt(t, prompt_version)
-            truth = t.resolved
+            t = by_label[lab]
+            user, truth = build_pointwise_prompt(t, prompt_version), t.resolved
         else:
             if not (pasted or "").strip():
                 return "Paste a transcript first."
-            user = POINTWISE_PROMPTS[prompt_version].format(rubric=rubric_text(),
-                                                            transcript=truncate_middle(pasted, 28_000))
+            user = POINTWISE_PROMPTS[prompt_version].format(rubric=rubric_text(), transcript=truncate_middle(pasted, 28_000))
             truth = None
         try:
             parsed, _, err = _call_with_parse(client, user, parse_pointwise)
@@ -68,44 +139,46 @@ def build_app():
             return f"⚠️ Judge call failed: {type(e).__name__}: {e}"
         return _format(parsed, err, truth)
 
-    def preview(example):
-        from .render import render_transcript
-
-        return render_transcript(by_label[example]) if example in by_label else ""
-
     report = ROOT / "results" / "report.md"
-    chart = ROOT / "results" / "kappa_by_dimension.png"
+    first_choices = choices(FILTERS[0])
+    first = first_choices[0] if first_choices else None
 
     with gr.Blocks(title="Agent transcript judge") as app:
         gr.Markdown("# LLM-as-Judge for coding-agent transcripts\n"
-                    "Scores a SWE-agent run on correctness, tool use, and reasoning, and estimates whether "
-                    "its patch passes the hidden tests.")
-        with gr.Tab("Judge a transcript"):
+                    "How well can an LLM grade an AI coding agent? Each transcript is a real SWE-agent attempt at a "
+                    "GitHub issue, with the hidden truth of whether its patch passed the tests. "
+                    "[Code and write-up on GitHub](https://github.com/krishnagiri1/agent-judge)")
+        with gr.Tab("Saved verdicts"):
+            gr.Markdown(f"Verdicts recorded during the experiments ({len(trajs)} transcripts). "
+                        "Compare each judge with the actual outcome and the human label.")
+            with gr.Row():
+                flt = gr.Radio(FILTERS, value=FILTERS[0], label="Show")
+                pick = gr.Dropdown(first_choices, value=first, label="Transcript")
+            verdicts = gr.Markdown()
+            transcript = gr.Textbox(label="Transcript (exactly what the judge saw)", lines=24, interactive=False)
+            flt.change(refilter, flt, [pick, verdicts, transcript])
+            pick.change(show_saved, pick, [verdicts, transcript])
+            app.load(show_saved, pick, [verdicts, transcript])
+        with gr.Tab("Judge live"):
+            gr.Markdown("Run the judge now. Without an API key configured, only the heuristic baseline (`mock`) works.")
             with gr.Row():
                 with gr.Column():
-                    source = gr.Radio(["Example from the dataset", "Paste my own"],
-                                      value="Example from the dataset" if examples else "Paste my own", label="Input")
-                    example = gr.Dropdown(list(by_label), label="Example", value=next(iter(by_label), None))
-                    pasted = gr.Textbox(label="Transcript text", lines=10)
+                    source = gr.Radio(["Example from the dataset", "Paste my own"], value="Example from the dataset",
+                                      label="Input")
+                    lab_live = gr.Dropdown(list(by_label), value=first, label="Example")
+                    pasted = gr.Textbox(label="Transcript text", lines=8)
                     with gr.Row():
                         provider = gr.Dropdown(["openai", "anthropic", "ollama", "mock"],
                                                value=os.environ.get("JUDGE_PROVIDER", "mock"), label="Provider")
                         model = gr.Textbox(value=os.environ.get("JUDGE_MODEL", "heuristic"), label="Model")
-                    prompt_version = gr.Radio(list(POINTWISE_PROMPTS), value="v2", label="Prompt")
+                    prompt_version = gr.Radio(list(POINTWISE_PROMPTS), value="v1", label="Prompt")
                     go = gr.Button("Judge", variant="primary")
                 with gr.Column():
                     result = gr.Markdown()
-                    shown = gr.Textbox(label="Transcript as the judge sees it", lines=20, interactive=False)
-            example.change(preview, example, shown)
-            app.load(preview, example, shown)
-            go.click(run, [source, example, pasted, provider, model, prompt_version], result)
+            go.click(run_live, [source, lab_live, pasted, provider, model, prompt_version], result)
         with gr.Tab("Results"):
-            if report.exists():
-                gr.Markdown(report.read_text(encoding="utf-8"))
-                if chart.exists():
-                    gr.Image(str(chart), show_label=False)
-            else:
-                gr.Markdown("Run `python -m agent_judge report` to generate results.")
+            gr.Markdown(report.read_text(encoding="utf-8") if report.exists()
+                        else "Run `python -m agent_judge report` to generate results.")
         with gr.Tab("Rubric"):
             gr.Markdown(f"```\n{rubric_text()}\n```\n\nSystem prompt:\n\n> {SYSTEM_PROMPT}")
     return app

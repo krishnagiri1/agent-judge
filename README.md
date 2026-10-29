@@ -14,7 +14,7 @@ and **verbosity bias**.
 - **Metrics:** AUROC vs. test outcomes (primary, no labeling needed), quadratic-weighted Cohen's κ and
   Spearman vs. 50 human labels, order-flip rate under swapped pairs, and score shift under content-free padding.
 - **Tracking:** every run logged to MLflow.
-- **Demo:** a Gradio app that scores any transcript, deployable to Hugging Face Spaces.
+- **Demo:** a Gradio app to browse every saved verdict against the real outcome, or judge a transcript live.
 
 ## Results
 
@@ -184,11 +184,16 @@ and local Ollama runs are free.
 
 ## Deploy the demo to Hugging Face Spaces
 
-1. Create a new Space with the **Gradio** SDK.
-2. Upload `app.py`, `requirements.txt`, the `agent_judge/` folder, `examples/`, and your `results/`
-   folder (`report.md` + `kappa_by_dimension.png`) so the Results tab shows your numbers.
-3. In the Space settings add `JUDGE_PROVIDER`, `JUDGE_MODEL` and your API key (e.g. `OPENAI_API_KEY`)
-   as secrets. Without them, the demo still runs with the heuristic baseline.
+The demo's main tab shows the saved verdicts from the experiments next to the real test outcome and the
+human labels, so it needs no GPU or API key. One command publishes it:
+
+```bash
+python -c "from huggingface_hub import login; login()"     # once: paste a Hugging Face write token
+python scripts/deploy_space.py                              # creates <your-username>/agent-judge
+```
+
+To enable live judging on the Space, add `JUDGE_PROVIDER`, `JUDGE_MODEL` and the matching API key
+(e.g. `OPENAI_API_KEY`) under the Space's Settings → Variables and secrets.
 
 ## Project layout
 
@@ -207,6 +212,7 @@ agent_judge/
   demo_app.py       public demo UI
   cli.py            python -m agent_judge <command>
 app.py              Hugging Face Spaces entry point
+scripts/            deploy_space.py: publish the demo to Hugging Face Spaces
 examples/           8 bundled transcripts for the demo
 docs/               labeling guide
 tests/              unit + end-to-end tests (mock judge, no network)
