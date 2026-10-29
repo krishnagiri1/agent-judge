@@ -14,7 +14,7 @@ and **verbosity bias**.
 - **Metrics:** AUROC vs. test outcomes (primary, no labeling needed), quadratic-weighted Cohen's κ and
   Spearman vs. 50 human labels, order-flip rate under swapped pairs, and score shift under content-free padding.
 - **Tracking:** every run logged to MLflow.
-- **Demo:** a Gradio app to browse every saved verdict against the real outcome, or judge a transcript live.
+- **Demo:** [browse every verdict against the real outcome](https://krishnagiri1.github.io/agent-judge/) (static page), or judge a transcript live with the local Gradio app.
 
 ## Results
 
@@ -182,18 +182,19 @@ before the full run. Every command is resumable; interrupting and re-running con
 4M input tokens per judge × prompt. Check your provider's current pricing; small models make this cheap,
 and local Ollama runs are free.
 
-## Deploy the demo to Hugging Face Spaces
+## Publish the demo on GitHub Pages (free)
 
-The demo's main tab shows the saved verdicts from the experiments next to the real test outcome and the
-human labels, so it needs no GPU or API key. One command publishes it:
+The demo is a static page: every verdict is pre-computed, so it needs no server, GPU, or API key.
 
 ```bash
-python -c "from huggingface_hub import login; login()"     # once: paste a Hugging Face write token
-python scripts/deploy_space.py                              # creates <your-username>/agent-judge
+python -m agent_judge export-site      # writes docs/index.html + docs/data.js
 ```
 
-To enable live judging on the Space, add `JUDGE_PROVIDER`, `JUDGE_MODEL` and the matching API key
-(e.g. `OPENAI_API_KEY`) under the Space's Settings → Variables and secrets.
+Open `docs/index.html` locally to preview it, commit and push, then on GitHub go to
+**Settings → Pages → Build and deployment**, choose **Deploy from a branch**, branch `main`, folder `/docs`,
+and save. The page appears at `https://<username>.github.io/agent-judge/` within a few minutes.
+
+For live judging with any model, run the Gradio app locally: `python -m agent_judge demo`.
 
 ## Project layout
 
@@ -209,12 +210,12 @@ agent_judge/
   report.py         results/report.md, metrics.json, chart
   tracking.py       MLflow logging of runs and bias experiments
   labeling_app.py   blind hand-labeling UI
-  demo_app.py       public demo UI
+  demo_app.py       Gradio demo (saved verdicts + live judging)
+  site.py           static verdict browser for GitHub Pages
   cli.py            python -m agent_judge <command>
-app.py              Hugging Face Spaces entry point
-scripts/            deploy_space.py: publish the demo to Hugging Face Spaces
+app.py              Gradio entry point
 examples/           8 bundled transcripts for the demo
-docs/               labeling guide
+docs/               labeling guide + the published static demo
 tests/              unit + end-to-end tests (mock judge, no network)
 ```
 

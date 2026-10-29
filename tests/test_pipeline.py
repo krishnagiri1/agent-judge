@@ -87,3 +87,16 @@ def test_mlflow_logging(tmp_path, trajs, monkeypatch):
     assert "Logged" in report
     runs = mlflow.search_runs(experiment_names=["agent-judge"])
     assert "metrics.auroc_resolved_probability" in runs.columns
+
+
+def test_export_site(tmp_path, trajs, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    from agent_judge.site import export_site
+
+    save_trajectories(trajs, "data/sample.jsonl")
+    judge_many(make_client("mock", "h", cache=False), trajs, "v2", "results/judge_mock_v2.jsonl", progress=False)
+    page = export_site("data/sample.jsonl", "data/labels.jsonl", "results", "docs")
+    js = (tmp_path / "docs" / "data.js").read_text()
+    assert page.exists() and js.startswith("window.AGENT_JUDGE_DATA = ")
+    data = json.loads(js[len("window.AGENT_JUDGE_DATA = "):].rstrip().rstrip(";"))
+    assert len(data["items"]) == len(trajs) and data["items"][0]["verdicts"]

@@ -98,6 +98,13 @@ def cmd_report(a):
     print(build_report(a.sample, a.labels, a.results, mlflow=not a.no_mlflow))
 
 
+def cmd_export_site(a):
+    from .site import export_site
+
+    page = export_site(a.sample, a.labels, a.results, a.out)
+    print(f"Wrote {page} and {page.parent / 'data.js'}. Open {page} in a browser to preview it.")
+
+
 def cmd_demo(a):
     from .demo_app import build_app
 
@@ -148,6 +155,13 @@ def main(argv=None):
     p.add_argument("--results", default="results")
     p.add_argument("--no-mlflow", action="store_true", help="Skip logging runs to MLflow")
     p.set_defaults(fn=cmd_report)
+
+    p = sub.add_parser("export-site", help="Write a static verdict browser (for GitHub Pages) to docs/")
+    p.add_argument("--sample", default=DEFAULT_SAMPLE)
+    p.add_argument("--labels", default=DEFAULT_LABELS)
+    p.add_argument("--results", default="results")
+    p.add_argument("--out", default="docs")
+    p.set_defaults(fn=cmd_export_site)
 
     p = sub.add_parser("demo", help="Launch the public demo app")
     p.add_argument("--port", type=int, default=7861)
