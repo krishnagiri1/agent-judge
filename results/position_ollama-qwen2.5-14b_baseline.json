@@ -1,0 +1,11 @@
+{
+  "judge": "ollama:qwen2.5:14b",
+  "prompt": "baseline",
+  "n_pairs": 100,
+  "n_decisions": 200,
+  "inconsistency_rate": 0.3,
+  "first_position_win_rate": 0.5707070707070707,
+  "tie_rate": 0.01,
+  "accuracy_single_order": 0.71,
+  "accuracy_swap_aggregated": 0.71
+}

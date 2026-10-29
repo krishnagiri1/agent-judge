@@ -1,0 +1,335 @@
+{
+  "n_transcripts": 500,
+  "n_issues": 250,
+  "n_human_labels": 50,
+  "runs": {
+    "judge_mock-heuristic-pb0.0-vb0_v2": {
+      "judge": "mock:heuristic:pb0.0:vb0",
+      "prompt": "v2",
+      "parse_error_rate": 0.0,
+      "agreement": {
+        "n": 50,
+        "dims": {
+          "correctness": {
+            "kappa": 0.22379032258064502,
+            "kappa_ci95": [
+              0.09828674481514876,
+              0.3851166701702755
+            ],
+            "spearman": 0.4305176839563911,
+            "exact": 0.28,
+            "within_1": 0.58,
+            "mean_human": 2.36,
+            "mean_judge": 3.6
+          },
+          "tool_use": {
+            "kappa": 0.2729439809296782,
+            "kappa_ci95": [
+              0.14004914004914015,
+              0.43086508507069265
+            ],
+            "spearman": 0.5440488971896517,
+            "exact": 0.26,
+            "within_1": 0.6,
+            "mean_human": 2.3,
+            "mean_judge": 3.54
+          },
+          "reasoning": {
+            "kappa": 0.11609498680738783,
+            "kappa_ci95": [
+              0.04072043852779961,
+              0.22323372254106477
+            ],
+            "spearman": 0.35479345241308397,
+            "exact": 0.12,
+            "within_1": 0.42,
+            "mean_human": 1.86,
+            "mean_judge": 3.6
+          },
+          "overall": {
+            "kappa": 0.18932527693857004,
+            "kappa_ci95": [
+              0.08363448631905002,
+              0.32527693856998996
+            ],
+            "spearman": 0.45029309530535794,
+            "exact": 0.22,
+            "within_1": 0.52,
+            "mean_human": 2.14,
+            "mean_judge": 3.6
+          }
+        }
+      },
+      "ground_truth_all": {
+        "n": 500,
+        "base_rate": 0.5,
+        "auroc_resolved_probability": 0.649216,
+        "auroc_resolved_probability_ci95": [
+          0.6026159999999999,
+          0.6959035640761708
+        ],
+        "auroc_correctness": 0.64776,
+        "auroc_tool_use": 0.645776,
+        "auroc_reasoning": 0.64776,
+        "auroc_overall": 0.64776
+      },
+      "ground_truth_labeled": {
+        "n": 50,
+        "base_rate": 0.58,
+        "auroc_resolved_probability": 0.6830870279146141,
+        "auroc_resolved_probability_ci95": [
+          0.5280135823429541,
+          0.8208333333333333
+        ],
+        "auroc_correctness": 0.6354679802955665,
+        "auroc_tool_use": 0.6272577996715928,
+        "auroc_reasoning": 0.6354679802955665,
+        "auroc_overall": 0.6354679802955665
+      }
+    },
+    "judge_ollama-qwen2.5-14b_v1": {
+      "judge": "ollama:qwen2.5:14b",
+      "prompt": "v1",
+      "parse_error_rate": 0.0,
+      "agreement": {
+        "n": 50,
+        "dims": {
+          "correctness": {
+            "kappa": 0.2220585527527159,
+            "kappa_ci95": [
+              0.0720193665523502,
+              0.377773490256608
+            ],
+            "spearman": 0.4207532180492064,
+            "exact": 0.26,
+            "within_1": 0.5,
+            "mean_human": 2.36,
+            "mean_judge": 3.66
+          },
+          "tool_use": {
+            "kappa": 0.019292604501607635,
+            "kappa_ci95": [
+              -0.03874585776191686,
+              0.0756302521008404
+            ],
+            "spearman": 0.10539906207508924,
+            "exact": 0.18,
+            "within_1": 0.42,
+            "mean_human": 2.3,
+            "mean_judge": 3.88
+          },
+          "reasoning": {
+            "kappa": 0.1189050470487597,
+            "kappa_ci95": [
+              0.044170890658942974,
+              0.20087005863438634
+            ],
+            "spearman": 0.5050396525225804,
+            "exact": 0.08,
+            "within_1": 0.28,
+            "mean_human": 1.86,
+            "mean_judge": 3.7
+          },
+          "overall": {
+            "kappa": 0.12648838571149723,
+            "kappa_ci95": [
+              0.03539823008849563,
+              0.22103213242453745
+            ],
+            "spearman": 0.4281993602429901,
+            "exact": 0.22,
+            "within_1": 0.38,
+            "mean_human": 2.14,
+            "mean_judge": 3.72
+          }
+        }
+      },
+      "ground_truth_all": {
+        "n": 500,
+        "base_rate": 0.5,
+        "auroc_resolved_probability": 0.705688,
+        "auroc_resolved_probability_ci95": [
+          0.6606307566186045,
+          0.750264
+        ],
+        "auroc_correctness": 0.706352,
+        "auroc_tool_use": 0.5532000000000001,
+        "auroc_reasoning": 0.6749759999999999,
+        "auroc_overall": 0.6804399999999999
+      },
+      "ground_truth_labeled": {
+        "n": 50,
+        "base_rate": 0.58,
+        "auroc_resolved_probability": 0.6141215106732348,
+        "auroc_resolved_probability_ci95": [
+          0.4176570458404075,
+          0.7850241545893719
+        ],
+        "auroc_correctness": 0.6576354679802956,
+        "auroc_tool_use": 0.4819376026272578,
+        "auroc_reasoning": 0.6231527093596059,
+        "auroc_overall": 0.638752052545156
+      }
+    },
+    "judge_ollama-qwen2.5-14b_v2": {
+      "judge": "ollama:qwen2.5:14b",
+      "prompt": "v2",
+      "parse_error_rate": 0.0,
+      "agreement": {
+        "n": 50,
+        "dims": {
+          "correctness": {
+            "kappa": 0.17616072522356985,
+            "kappa_ci95": [
+              0.0451921896107087,
+              0.31924549709261085
+            ],
+            "spearman": 0.31314954365458797,
+            "exact": 0.2,
+            "within_1": 0.48,
+            "mean_human": 2.36,
+            "mean_judge": 4.18
+          },
+          "tool_use": {
+            "kappa": 0.05943827563683868,
+            "kappa_ci95": [
+              0.0034662045060658286,
+              0.12095175148711179
+            ],
+            "spearman": 0.28579458808111086,
+            "exact": 0.06,
+            "within_1": 0.28,
+            "mean_human": 2.3,
+            "mean_judge": 4.46
+          },
+          "reasoning": {
+            "kappa": 0.1345833795628536,
+            "kappa_ci95": [
+              0.0665348377340933,
+              0.2151162790697675
+            ],
+            "spearman": 0.5579889810574165,
+            "exact": 0.0,
+            "within_1": 0.2,
+            "mean_human": 1.86,
+            "mean_judge": 4.18
+          },
+          "overall": {
+            "kappa": 0.1278716421538837,
+            "kappa_ci95": [
+              0.04924427108727436,
+              0.21437795953508387
+            ],
+            "spearman": 0.4255548662925193,
+            "exact": 0.04,
+            "within_1": 0.32,
+            "mean_human": 2.14,
+            "mean_judge": 4.28
+          }
+        }
+      },
+      "ground_truth_all": {
+        "n": 500,
+        "base_rate": 0.5,
+        "auroc_resolved_probability": 0.669992,
+        "auroc_resolved_probability_ci95": [
+          0.6210199244025882,
+          0.7158156971434979
+        ],
+        "auroc_correctness": 0.668208,
+        "auroc_tool_use": 0.6310640000000001,
+        "auroc_reasoning": 0.65648,
+        "auroc_overall": 0.6571039999999999
+      },
+      "ground_truth_labeled": {
+        "n": 50,
+        "base_rate": 0.58,
+        "auroc_resolved_probability": 0.5779967159277504,
+        "auroc_resolved_probability_ci95": [
+          0.3938492063492063,
+          0.7387820512820513
+        ],
+        "auroc_correctness": 0.5656814449917897,
+        "auroc_tool_use": 0.5303776683087028,
+        "auroc_reasoning": 0.5714285714285714,
+        "auroc_overall": 0.5722495894909688
+      }
+    }
+  },
+  "position_bias": [
+    {
+      "judge": "ollama:qwen2.5:14b",
+      "prompt": "baseline",
+      "n_pairs": 100,
+      "n_decisions": 200,
+      "inconsistency_rate": 0.3,
+      "first_position_win_rate": 0.5707070707070707,
+      "tie_rate": 0.01,
+      "accuracy_single_order": 0.71,
+      "accuracy_swap_aggregated": 0.71
+    },
+    {
+      "judge": "ollama:qwen2.5:14b",
+      "prompt": "debiased",
+      "n_pairs": 100,
+      "n_decisions": 200,
+      "inconsistency_rate": 0.41,
+      "first_position_win_rate": 0.3984375,
+      "tie_rate": 0.36,
+      "accuracy_single_order": 0.68,
+      "accuracy_swap_aggregated": 0.66
+    }
+  ],
+  "verbosity_bias": [
+    {
+      "judge": "ollama:qwen2.5:14b",
+      "prompt": "v2",
+      "n": 100,
+      "dims": {
+        "correctness": {
+          "mean_delta": -0.04,
+          "share_up": 0.09,
+          "share_down": 0.12,
+          "wilcoxon_p": 0.4142161782425252
+        },
+        "tool_use": {
+          "mean_delta": 0.06,
+          "share_up": 0.11,
+          "share_down": 0.05,
+          "wilcoxon_p": 0.13361440253771614
+        },
+        "reasoning": {
+          "mean_delta": -0.04,
+          "share_up": 0.13,
+          "share_down": 0.14,
+          "wilcoxon_p": 0.48564778154430144
+        },
+        "overall": {
+          "mean_delta": 0.0,
+          "share_up": 0.11,
+          "share_down": 0.11,
+          "wilcoxon_p": 1.0
+        },
+        "resolved_probability": {
+          "mean_delta": -0.35,
+          "share_up": 0.17,
+          "share_down": 0.22,
+          "wilcoxon_p": 0.6910112175936267
+        }
+      }
+    }
+  ],
+  "human_ground_truth": {
+    "n": 50,
+    "base_rate": 0.58,
+    "auroc_resolved_probability": 0.9187192118226601,
+    "auroc_resolved_probability_ci95": [
+      0.8242784380305602,
+      0.985576923076923
+    ],
+    "auroc_correctness": 0.8924466338259441,
+    "auroc_tool_use": 0.7348111658456487,
+    "auroc_reasoning": 0.8119868637110017,
+    "auroc_overall": 0.8669950738916257
+  }
+}

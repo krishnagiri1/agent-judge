@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+.venv/
+venv/
+.env
+
+# Raw dataset shards are ~90 MB each; re-download with `python -m agent_judge sample`
+data/raw/
+
+# Keep data/sample.jsonl and data/labels.jsonl committed: they make your results reproducible.
+
+# MLflow local tracking store
+mlruns/
+mlartifacts/
+mlflow.db

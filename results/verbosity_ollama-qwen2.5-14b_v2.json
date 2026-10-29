@@ -1,0 +1,37 @@
+{
+  "judge": "ollama:qwen2.5:14b",
+  "prompt": "v2",
+  "n": 100,
+  "dims": {
+    "correctness": {
+      "mean_delta": -0.04,
+      "share_up": 0.09,
+      "share_down": 0.12,
+      "wilcoxon_p": 0.4142161782425252
+    },
+    "tool_use": {
+      "mean_delta": 0.06,
+      "share_up": 0.11,
+      "share_down": 0.05,
+      "wilcoxon_p": 0.13361440253771614
+    },
+    "reasoning": {
+      "mean_delta": -0.04,
+      "share_up": 0.13,
+      "share_down": 0.14,
+      "wilcoxon_p": 0.48564778154430144
+    },
+    "overall": {
+      "mean_delta": 0.0,
+      "share_up": 0.11,
+      "share_down": 0.11,
+      "wilcoxon_p": 1.0
+    },
+    "resolved_probability": {
+      "mean_delta": -0.35,
+      "share_up": 0.17,
+      "share_down": 0.22,
+      "wilcoxon_p": 0.6910112175936267
+    }
+  }
+}

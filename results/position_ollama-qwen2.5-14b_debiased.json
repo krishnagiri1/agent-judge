@@ -1,0 +1,11 @@
+{
+  "judge": "ollama:qwen2.5:14b",
+  "prompt": "debiased",
+  "n_pairs": 100,
+  "n_decisions": 200,
+  "inconsistency_rate": 0.41,
+  "first_position_win_rate": 0.3984375,
+  "tie_rate": 0.36,
+  "accuracy_single_order": 0.68,
+  "accuracy_swap_aggregated": 0.66
+}
